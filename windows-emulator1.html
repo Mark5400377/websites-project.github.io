@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complex Windows Emulator</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #008080;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .desktop {
+            width: 100%;
+            height: 100%;
+            background-image: url('https://wallpapercave.com/wp/wp2754860.jpg');
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Taskbar */
+        .taskbar {
+            background-color: #000080;
+            height: 40px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            z-index: 999;
+        }
+
+        .start-button {
+            background-color: #00BFFF;
+            width: 120px;
+            color: white;
+            text-align: center;
+            line-height: 40px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .start-button:hover {
+            background-color: #00AFFF;
+        }
+
+        .taskbar .time {
+            color: white;
+            padding-right: 15px;
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .taskbar .open-windows {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-start;
+            align-items: center;
+            flex: 1;
+            margin-left: 20px;
+        }
+
+        .taskbar .open-windows button {
+            background-color: #00BFFF;
+            color: white;
+            border: none;
+            margin-right: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .taskbar .open-windows button:hover {
+            background-color: #009FFF;
+        }
+
+        /* Start Menu */
+        .start-menu {
+            position: absolute;
+            bottom: 40px;
+            left: 0;
+            background-color: #000080;
+            width: 200px;
+            border: 1px solid #333;
+            display: none;
+            z-index: 1000;
+        }
+
+        .start-menu ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .start-menu ul li {
+            background-color: #00BFFF;
+            color: white;
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #000080;
+        }
+
+        .start-menu ul li:hover {
+            background-color: #00AFFF;
+        }
+
+        /* Windows */
+        .window {
+            width: 500px;
+            height: 350px;
+            background-color: #FFFFFF;
+            border: 2px solid #000;
+            position: absolute;
+            top: 100px;
+            left: 100px;
+            box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            z-index: 2;
+        }
+
+        .title-bar {
+            background-color: #000080;
+            color: white;
+            padding: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+        }
+
+        .title-bar .buttons {
+            display: flex;
+        }
+
+        .title-bar .buttons button {
+            background-color: #FF0000;
+            border: none;
+            width: 25px;
+            height: 25px;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+
+        .title-bar .buttons button:hover {
+            background-color: #FF4444;
+        }
+
+        .content {
+            flex: 1;
+            padding: 10px;
+            overflow: auto;
+        }
+
+        /* Icons on Desktop */
+        .desktop-icons {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .icon {
+            width: 60px;
+            height: 60px;
+            background-color: #FFD700;
+            margin: 10px;
+            text-align: center;
+            padding-top: 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .icon:hover {
+            background-color: #FFC107;
+        }
+
+        .icon p {
+            font-size: 12px;
+            margin: 0;
+            padding-top: 5px;
+        }
+
+        /* Dragging Window */
+        .draggable {
+            position: absolute;
+            z-index: 10;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="desktop">
+        <!-- Иконки на рабочем столе -->
+        <div class="desktop-icons">
+            <div class="icon" onclick="openWindow('Мой компьютер')">
+                <p>Мой компьютер</p>
+            </div>
+            <div class="icon" onclick="openWindow('Корзина')">
+                <p>Корзина</p>
+            </div>
+            <div class="icon" onclick="openWindow('Блокнот')">
+                <p>Блокнот</p>
+            </div>
+        </div>
+
+        <!-- Окна -->
+        <div class="window draggable" id="window1" style="display: none;">
+            <div class="title-bar" onmousedown="dragElement(this.parentNode)">
+                <span id="window1-title">Мой компьютер</span>
+                <div class="buttons">
+                    <button onclick="closeWindow('window1')">X</button>
+                </div>
+            </div>
+            <div class="content">
+                <p>Это окно "Мой компьютер".</p>
+            </div>
+        </div>
+
+        <div class="window draggable" id="window2" style="display: none;">
+            <div class="title-bar" onmousedown="dragElement(this.parentNode)">
+                <span id="window2-title">Корзина</span>
+                <div class="buttons">
+                    <button onclick="closeWindow('window2')">X</button>
+                </div>
+            </div>
+            <div class="content">
+                <p>Это окно "Корзина".</p>
+            </div>
+        </div>
+
+        <div class="window draggable" id="window3" style="display: none;">
+            <div class="title-bar" onmousedown="dragElement(this.parentNode)">
+                <span id="window3-title">Блокнот</span>
+                <div class="buttons">
+                    <button onclick="closeWindow('window3')">X</button>
+                </div>
+            </div>
+            <div class="content">
+                <p>Это окно "Блокнот".</p>
+            </div>
+        </div>
+
+        <!-- Панель задач -->
+        <div class="taskbar">
+            <div class="start-button" onclick="toggleStartMenu()">Пуск</div>
+            <div class="open-windows" id="openWindows">
+                <!-- Открытые окна будут добавляться сюда -->
+            </div>
+            <div class="time" id="time">10:30 AM</div>
+        </div>
+
+        <!-- Меню Пуск -->
+        <div class="start-menu" id="startMenu">
+            <ul>
+                <li onclick="openWindow('Мой компьютер')">Мой компьютер</li>
+                <li onclick="openWindow('Корзина')">Корзина</li>
+                <li onclick="openWindow('Блокнот')">Блокнот</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let zIndex = 10;
+
+        function openWindow(windowName) {
+            var windowElement;
+            var taskButton;
+
+            if (windowName === 'Мой компьютер') {
+                windowElement = document.getElementById('window1');
+                taskButton = document.createElement('button');
+                taskButton.innerHTML = 'Мой компьютер';
+                taskButton.onclick = function() { toggleWindow('window1') };
+            } else if (windowName === 'Корзина') {
+                windowElement = document.getElementById('window2');
+                taskButton = document.createElement('button');
+                taskButton.innerHTML = 'Корзина';
+                taskButton.onclick = function() { toggleWindow('window2') };
+            } else if (windowName === 'Блокнот') {
+                windowElement = document.getElementById('window3');
+                taskButton = document.createElement('button');
+                taskButton.innerHTML = 'Блокнот';
+                taskButton.onclick = function() { toggleWindow('window3') };
+            }
+
+            windowElement.style.display = 'block';
+            windowElement.style.zIndex = ++zIndex;
+
+            document.getElementById('openWindows').appendChild(taskButton);
+        }
+
+        function toggleWindow(windowId) {
+            var windowElement = document.getElementById(windowId);
+            if (windowElement.style.display === 'block') {
+                windowElement.style.display = 'none';
+            } else {
+                windowElement.style.display = 'block';
+                windowElement.style.zIndex = ++zIndex;
+            }
+        }
+
+        function closeWindow(windowId) {
+            document.getElementById(windowId).style.display = 'none';
+        }
+
+        function toggleStartMenu() {
+            var startMenu = document.getElementById('startMenu');
+            if (startMenu.style.display === 'block') {
+                startMenu.style.display = 'none';
+            } else {
+                startMenu.style.display = 'block';
+            }
+        }
+
+        function dragElement(el) {
+            var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+            el.onmousedown = function(e) {
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            };
+
+            function elementDrag(e) {
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                el.style.top = (el.offsetTop - pos2) + "px";
+                el.style.left = (el.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+
+        // Обновление времени на панели задач
+        function updateTime() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, "0");
+            const timeString = hours + ":" + minutes + " " + (hours >= 12 ? "PM" : "AM");
+            document.getElementById('time').textContent = timeString;
+        }
+
+        setInterval(updateTime, 1000);
+        updateTime();
+    </script>
+</body>
+</html>
