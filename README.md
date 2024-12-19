@@ -10,3 +10,6 @@ websites
 https://mark5400377.github.io/websites-project.github.io/cats.html = cats
 ----------------
 https://mark5400377.github.io/websites-project.github.io/moon.html = moon
+----------------
+https://mark5400377.github.io/websites-project.github.io/windows-emulator1.html = windows
+----------------
